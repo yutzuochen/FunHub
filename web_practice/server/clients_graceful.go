@@ -3,14 +3,18 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 )
 
-var Concurrency = 3
-var PlayTime = 3
+var Concurrency = 5
+var PlayTime = 10
 var Bet = "1"
 
 type Client struct {
@@ -73,19 +77,34 @@ func main() {
 				fmt.Println("routineID", routineID, " single revenue: ", revenue)
 				cli.totalRevenue += revenue
 			}
-			time.Sleep(500 * time.Millisecond)
+			// time.Sleep(500 * time.Millisecond)
 
 			ch <- cli
 		}()
-		time.Sleep(700 * time.Millisecond) // to make seed of time different
+
+		// time.Sleep(700 * time.Millisecond) // to make seed of time different
 	}
 
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	// if err := client.Shutdown(ctx); err != nil {
+	// 	log.Fatal("Server Shutdown: ", err)
+	// }
 	for n := 1; n <= Concurrency; n++ {
 		clientArr = append(clientArr, <-ch)
 	}
 	revenue := 0
 	playTimes := 0
 	bet := 0
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal, 1)
+	// kill (no param) default send syscall.SIGTERM
+	// kill -2 is syscall.SIGINT
+	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutdown Server ...")
 	for _, c := range clientArr {
 		fmt.Println(" client", c.id, " play", c.totalPlayTimes, " times, his revenue: ", c.totalRevenue)
 		revenue += c.totalRevenue
