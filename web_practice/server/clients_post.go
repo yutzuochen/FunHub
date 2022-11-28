@@ -18,21 +18,16 @@ type Client struct {
 	totalRevenue   int
 	totalPlayTimes int
 	rtp            int
+	bet            int
 }
 
 func main() {
 	clientArr := []Client{}
-	// ch_revenue := make(chan int)
-	// ch_playTimes := make(chan int)
 	ch := make(chan Client)
 	for i := 1; i <= Concurrency; i++ {
 		routineID := i
 		go func() {
 			cli := Client{id: i}
-			// totalBet := 0
-			// totalRevenue := 0
-			// rtp := 0
-			// totalPlayTimes := 0
 
 			for t := 1; t <= PlayTime; t++ {
 				transport := &http.Transport{
@@ -48,7 +43,7 @@ func main() {
 				// create client side
 				client := &http.Client{
 					Transport: transport,
-					Timeout:   30 * time.Second, // 没饿
+					Timeout:   30 * time.Second,
 				}
 				url := "http://localhost:1210/play/" + Bet
 				// request data
@@ -66,6 +61,11 @@ func main() {
 				}
 				cli.totalPlayTimes += 1
 
+				bet, err := strconv.Atoi(Bet)
+				if err != nil {
+					fmt.Println(err)
+				}
+				cli.bet += bet
 				revenue, err := strconv.Atoi(string(bds))
 				if err != nil {
 					fmt.Println(err)
@@ -74,30 +74,26 @@ func main() {
 				cli.totalRevenue += revenue
 			}
 			time.Sleep(500 * time.Millisecond)
-			// fmt.Println("play times: ", totalPlayTimes)
-			// fmt.Println("Clinent", routineID, "'s revenue: ", totalRevenue)
-			// ch_revenue <- totalRevenue
-			// ch_playTimes <- totalPlayTimes
+
 			ch <- cli
 		}()
 		time.Sleep(700 * time.Millisecond) // to make seed of time different
 	}
-	// for c := 1; c <= Concurrency; c++ {
-	// 	revenueArr = append(revenueArr, <-ch_revenue)
-	// }
-	// for c := 1; c <= Concurrency; c++ {
-	// 	playTimesArr = append(playTimesArr, <-ch_playTimes)
-	// }
+
 	for n := 1; n <= Concurrency; n++ {
 		clientArr = append(clientArr, <-ch)
 	}
 	revenue := 0
 	playTimes := 0
-	for c := clientArr{
+	bet := 0
+	for _, c := range clientArr {
+		fmt.Println(" client", c.id, " play", c.totalPlayTimes, " times, his revenue: ", c.totalRevenue)
 		revenue += c.totalRevenue
 		playTimes += c.totalPlayTimes
+		bet += c.bet
 	}
 	fmt.Println("sum of revenue: ", revenue)
-	// fmt.Println("sum of playTimes: ", playTimes)
-	time.Sleep(500 * time.Millisecond)
+	fmt.Println("sum of bet: ", bet)
+	fmt.Println("RTP: ", float64(revenue)/float64(bet))
+
 }
