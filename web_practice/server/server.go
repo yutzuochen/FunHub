@@ -62,12 +62,6 @@ func main() {
 	if err := server.Shutdown(c); err != nil {
 		log.Println("server.Shutdown:", err)
 	}
-	//使用select去阻塞主線程，當子context發出Done()的訊號才繼續向下走
-	// select {
-	// case <-c.Done():
-	// 	fmt.Println("Graceful Shutdown start - 3")
-	// 	close(quit)
-	// }
 	fmt.Println("Graceful Shutdown end ")
 }
 func randomInt(min, max int) int {
