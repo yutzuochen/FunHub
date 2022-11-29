@@ -26,29 +26,6 @@ type Client struct {
 	bet            int
 }
 
-// Consumer struct
-type Consumer struct {
-	inputChan chan int // not yet use
-	jobsChan  chan Client
-}
-
-func (c Consumer) startConsumer(ctx context.Context) {
-	for {
-		select {
-		case job := <-c.inputChan:
-			if ctx.Err() != nil {
-				fmt.Println("job: ", job)
-				close(c.jobsChan)
-				return
-			}
-
-		case <-ctx.Done():
-			close(c.jobsChan)
-			return
-		}
-	}
-}
-
 func withContextFunc(ctx context.Context, f func()) context.Context {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
@@ -58,19 +35,18 @@ func withContextFunc(ctx context.Context, f func()) context.Context {
 
 		select {
 		case <-ctx.Done():
-			fmt.Println("[withContextFunc]case <-ctx.Done()")
+			log.Println("[withContextFunc]case <-ctx.Done()")
 		case <-c:
-			fmt.Println("[withContextFunc]case <-c:")
+			log.Println("[withContextFunc]case <-c:")
 			cancel()
 			f()
 		}
 	}()
-
 	return ctx
 }
-func virtualCli(ctx context.Context, routineID int, clientCh chan Client) {
-	cli := Client{id: routineID}
 
+func virtualCliPlay(ctx context.Context, routineID int, clientCh chan Client) {
+	cli := Client{id: routineID}
 ForEnd:
 	for {
 		select {
@@ -80,8 +56,6 @@ ForEnd:
 			clientCh <- cli
 			return
 		default:
-
-			// for t := 1; t <= PlayTime; t++ {
 			transport := &http.Transport{
 				DialContext: (&net.Dialer{
 					Timeout:   30 * time.Second,
@@ -114,39 +88,32 @@ ForEnd:
 
 			bet, err := strconv.Atoi(Bet)
 			if err != nil {
-				fmt.Println(err)
+				log.Fatal(err)
+				// fmt.Println(err)
 			}
 
 			revenue, err := strconv.Atoi(string(bds))
 			if err != nil {
-				fmt.Println(err)
+				log.Fatal(err)
 			}
-			fmt.Println("routineID", routineID, " single revenue: ", revenue)
+			log.Println("routineID", routineID, " single revenue: ", revenue)
 			cli.totalPlayTimes++
 			cli.bet += bet
 			cli.totalRevenue += revenue
-			fmt.Println("[virtualCli]case default end")
+
 			if cli.totalPlayTimes >= PlayTimes {
 				break ForEnd
 			}
 		}
-		// time.Sleep(500 * time.Millisecond)
-
 	}
-	fmt.Println("[virtualCli] befor, clientCh <- cli")
 	clientCh <- cli
-	fmt.Println("[virtualCli] after, clientCh <- cli")
-	// }
+
 }
 
 func main() {
 	clientArr := []Client{}
 	clientCh := make(chan Client)
 	finished := make(chan bool)
-	// create the consumer
-	// consumer := Consumer{
-	// 	jobsChan: make(chan Client, Concurrency),
-	// }
 
 	ctx := withContextFunc(context.Background(), func() {
 		log.Println("cancel from ctrl+c event")
@@ -154,8 +121,7 @@ func main() {
 	})
 
 	for i := 1; i <= Concurrency; i++ {
-		// routineID := i
-		go virtualCli(ctx, i, clientCh)   //??try??
+		go virtualCliPlay(ctx, i, clientCh)
 		time.Sleep(50 * time.Millisecond) // to make seed of time different
 	}
 	// <-finished

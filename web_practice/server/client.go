@@ -9,25 +9,23 @@ import (
 )
 
 func main() {
-	// 创建连击池
 	transport := &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).DialContext,
-		MaxIdleConns:          100,              // 最大空闲连接数
-		IdleConnTimeout:       90 * time.Second, // 空闲超时时间
-		TLSHandshakeTimeout:   10 * time.Second, // tls 握手超时时间
-		ExpectContinueTimeout: 1 * time.Second,  // 100-continue状态码超时时间
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 	}
 
-	// 创建客户端
+	// create clinet side
 	client := &http.Client{
 		Transport: transport,
 		Timeout:   30 * time.Second, // 没饿
 	}
 
-	// 请求数据
 	resp, err := client.Get("http://localhost:1210/play/2")
 
 	if err != nil {
@@ -35,7 +33,7 @@ func main() {
 	}
 	defer resp.Body.Close()
 
-	// 读取数据
+	// read data
 	bds, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
