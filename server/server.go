@@ -70,7 +70,7 @@ func play(w http.ResponseWriter, r *http.Request) {
 	log.Println("bet, multiple, random number: ", bet_str, M[ran], ran)
 	bet, err := strconv.Atoi(bet_str)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	res := strconv.Itoa(bet * M[ran])
