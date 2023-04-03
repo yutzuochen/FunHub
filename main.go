@@ -2,17 +2,24 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 
 	"net/http"
 	"os"
 	"os/signal"
 
+	"Funhub/db"
 	gc "Funhub/gamecore"
 	"syscall"
 	"time"
 
+	"Funhub/login"
+
 	"github.com/sirupsen/logrus"
 )
+
+var dbHdr *sql.DB
 
 func init() {
 	//log輸出為json格式
@@ -21,6 +28,12 @@ func init() {
 	logrus.SetOutput(os.Stdout)
 	//設定要輸出的log等級
 	logrus.SetLevel(logrus.DebugLevel)
+	var err error
+	err = db.InitDB()
+	if err != nil {
+		fmt.Println("DB init error: ", err)
+		return
+	}
 }
 func main() {
 	logrus.Info("example log")
@@ -32,7 +45,8 @@ func main() {
 	ctx := context.Background()
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/play/", gc.Play)
+	mux.HandleFunc("/play", gc.Play)
+	mux.HandleFunc("/login", login.Login)
 
 	server := &http.Server{
 		Addr:         ":1210",

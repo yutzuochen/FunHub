@@ -26,12 +26,21 @@ func randomInt(min, max int) int {
 }
 
 func Play(w http.ResponseWriter, r *http.Request) {
-	bet_str := strings.TrimPrefix(r.URL.Path, "/play/")
+	// http://127.0.0.1:<port>/play?Ante=1
+	// bet_str := strings.TrimPrefix(r.URL.Path, "/play/")
+	q := r.URL.Query()
+	anteArr, ok := q["ante"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("<h1>no this field</h1>"))
+		return
+	}
+	ante := strings.Join(anteArr, "")
 	rand.Seed(time.Now().UnixNano())
 	ran := randomInt(1, 7)
 	// logrus.Debug("bet: %s, multiple: %v, random number: : %v", bet_str, M[ran], ran)
-	fmt.Printf("bet: %v, random number: %v, multiple: %v \n", bet_str, ran, M[ran])
-	bet, err := strconv.Atoi(bet_str)
+	fmt.Printf("bet: %v, random number: %v, multiple: %v \n", ante, ran, M[ran])
+	bet, err := strconv.Atoi(ante)
 	if err != nil {
 		log.Fatal(err)
 	}
