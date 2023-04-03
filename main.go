@@ -21,6 +21,10 @@ import (
 
 var dbHdr *sql.DB
 
+const (
+	SecretKey = "mason boxing golang"
+)
+
 func init() {
 	//log輸出為json格式
 	logrus.SetFormatter(&logrus.JSONFormatter{})
@@ -45,7 +49,9 @@ func main() {
 	ctx := context.Background()
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/play", gc.Play)
+	// mux.HandleFunc("/play", gc.Play)
+	mux.Handle("/play", login.Validate(SecretKey, gc.Play))
+	// mux.Handle("/play", gc.Play)
 	mux.HandleFunc("/login", login.Login)
 
 	server := &http.Server{

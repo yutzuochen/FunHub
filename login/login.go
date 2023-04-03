@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 const SecretKey = "mason boxing golang"
@@ -70,9 +72,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			// Expires: expirationTime,
 		})
 		fmt.Println("w.Header(): ", w.Header())
-
+		fmt.Fprintln(w, "Success to login! Welcome to Funhub :))")
 		// http.Redirect(w, r, "/web", http.StatusMovedPermanently)
-		fmt.Println("finish??")
 	} else {
 		fmt.Fprintln(w, s)
 		fmt.Fprintln(w, "loginng failed, get fucking out!")
@@ -102,5 +103,44 @@ func checkPW(account, password string) string {
 		return id
 	}
 	return ""
+}
 
+func Validate(secretKey string, next func(w http.ResponseWriter, r *http.Request, id string)) http.Handler {
+	fmt.Println("start to ValidateJWT")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// if r.Header["Token"] != nil {
+		if cookie, err := r.Cookie("token"); err != nil {
+			fmt.Println("error from validating: ", err)
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("You haven't be authorized, please login fitst"))
+			return
+		} else {
+			fmt.Println("r.Cookie('token').value: ", cookie.Value)
+			token, err := jwt.Parse(cookie.Value, func(t *jwt.Token) (interface{}, error) {
+				_, ok := t.Method.(*jwt.SigningMethodHMAC)
+				if !ok {
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte("not authorized"))
+					// return SecretKey, nil
+				}
+				return []byte(secretKey), nil
+			})
+			// error in pasing token
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("not authorized: " + err.Error()))
+				return
+			}
+
+			if token.Valid {
+
+				next(w, r, token.Claims.(jwt.MapClaims)["id"].(string))
+				// next(w, r)
+
+			} else {
+				fmt.Println("token is not valid :(((((")
+				http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+			}
+		}
+	})
 }
