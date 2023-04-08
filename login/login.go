@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/sirupsen/logrus"
 )
 
 const SecretKey = "mason boxing golang"
@@ -71,7 +72,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Value: tokenString,
 			// Expires: expirationTime,
 		})
-		fmt.Println("w.Header(): ", w.Header())
 		fmt.Fprintln(w, "Success to login! Welcome to Funhub :))")
 		// http.Redirect(w, r, "/web", http.StatusMovedPermanently)
 	} else {
@@ -90,7 +90,6 @@ func checkPW(account, password string) string {
 		return ""
 	}
 	defer rows.Close()
-	fmt.Println("[checkPW] rows: ", rows)
 	if rows.Next() {
 		var ac string
 		var id string
@@ -110,12 +109,11 @@ func Validate(secretKey string, next func(w http.ResponseWriter, r *http.Request
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// if r.Header["Token"] != nil {
 		if cookie, err := r.Cookie("token"); err != nil {
-			fmt.Println("error from validating: ", err)
+			logrus.Errorln("error from validating: ", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("You haven't be authorized, please login fitst"))
 			return
 		} else {
-			fmt.Println("r.Cookie('token').value: ", cookie.Value)
 			token, err := jwt.Parse(cookie.Value, func(t *jwt.Token) (interface{}, error) {
 				_, ok := t.Method.(*jwt.SigningMethodHMAC)
 				if !ok {
@@ -133,10 +131,7 @@ func Validate(secretKey string, next func(w http.ResponseWriter, r *http.Request
 			}
 
 			if token.Valid {
-
 				next(w, r, token.Claims.(jwt.MapClaims)["id"].(string))
-				// next(w, r)
-
 			} else {
 				fmt.Println("token is not valid :(((((")
 				http.Redirect(w, r, "/login", http.StatusMovedPermanently)

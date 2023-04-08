@@ -40,7 +40,6 @@ func init() {
 	}
 }
 func main() {
-	logrus.Info("example log")
 	logrus.WithFields(logrus.Fields{
 		"trace": "trace-0001",
 	}).Error("Error Log")
@@ -51,7 +50,6 @@ func main() {
 
 	// mux.HandleFunc("/play", gc.Play)
 	mux.Handle("/play", login.Validate(SecretKey, gc.Play))
-	// mux.Handle("/play", gc.Play)
 	mux.HandleFunc("/login", login.Login)
 
 	server := &http.Server{

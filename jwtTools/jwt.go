@@ -13,7 +13,6 @@ func ValidateJWT(secretKey string, next func(w http.ResponseWriter, r *http.Requ
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// if r.Header["Token"] != nil {
 		if cookie, err := r.Cookie("token"); err == nil {
-			fmt.Println("r.Cookie('token').value: ", cookie.Value)
 			token, err := jwt.Parse(cookie.Value, func(t *jwt.Token) (interface{}, error) {
 				_, ok := t.Method.(*jwt.SigningMethodHMAC)
 				if !ok {

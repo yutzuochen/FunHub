@@ -44,9 +44,10 @@ func Play(w http.ResponseWriter, r *http.Request, userID string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	revenue := ante * M[ran]
+	netIncome := ante*M[ran] - ante
+	fmt.Println("netIncome: ", netIncome)
 	// revenueStr := strconv.Itoa(revenue)
 	// settlement
-	diceSettlement(userID, ante, revenue)
-	fmt.Fprintf(w, strconv.Itoa(revenue))
+	diceSettlement(userID, ante, netIncome)
+	fmt.Fprintf(w, strconv.Itoa(netIncome))
 }
