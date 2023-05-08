@@ -53,7 +53,7 @@ func main() {
 	mux.HandleFunc("/login", login.Login)
 
 	server := &http.Server{
-		Addr:         ":1210",
+		Addr:         ":8080",
 		WriteTimeout: time.Second * 3,
 		Handler:      mux,
 	}

@@ -26,7 +26,7 @@ func randomInt(min, max int) int {
 }
 
 func Play(w http.ResponseWriter, r *http.Request, userID string) {
-	// http://127.0.0.1:<port>/play?Ante=1
+	// http://127.0.0.1:<port>/play?ante=1
 	// bet_str := strings.TrimPrefix(r.URL.Path, "/play/")
 	q := r.URL.Query()
 	anteArr, ok := q["ante"]

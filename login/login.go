@@ -107,7 +107,6 @@ func checkPW(account, password string) string {
 func Validate(secretKey string, next func(w http.ResponseWriter, r *http.Request, id string)) http.Handler {
 	fmt.Println("start to ValidateJWT")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// if r.Header["Token"] != nil {
 		if cookie, err := r.Cookie("token"); err != nil {
 			logrus.Errorln("error from validating: ", err)
 			w.WriteHeader(http.StatusUnauthorized)
